@@ -17,6 +17,11 @@ much simpler!)
 -}
 module Main where
 
+import Data.Char       (toLower, toUpper, isNumber, isLetter)
+import Data.List       (intercalate)
+import Data.List.Split (splitOneOf)
+
+import System.IO       (hFlush, stdout)
 import System.Console.ANSI
 
 
@@ -37,9 +42,38 @@ bk str = colorPutStr Green $ "Bridgekeeper: " ++ str ++ "\n"
 bkn :: String -> IO ()
 bkn str = colorPutStr Green $ "Bridgekeeper: " ++ str
 
--- |Prompt
+-- |Narrative 'you'
 you :: String -> IO ()
 you str = colorPutStr Yellow $  "You: " ++ str ++ "\n"
+
+-- |Prompts the user and returns an answer
+ask :: String -> IO String
+ask info = do
+  bk $ "What is your " ++ info ++ "?"
+  putStr "> "
+  hFlush stdout -- Because we want to ask on the same line
+  getLine
+
+-- |Verify that the project name is conformant
+checkProjectName :: String -> Bool
+checkProjectName [] = False
+checkProjectName str =
+  all (\c -> isLetter c || isNumber c || c == '-' || c == ' ') str
+
+-- |Lowercase a string and replace its spaces with dashes.
+-- For example: "Holy Haskell Starter" becomes "holy-haskell-starter"
+projectNameFromString :: String -> String
+projectNameFromString str = intercalate "-" $ splitOneOf " -" $ map toLower str
+
+-- |Create a module name from a string using CamelCase
+-- For example, "Holy project" becomes "HolyProject"
+camelCase :: String -> String
+camelCase str = concatMap capitalizeWord (splitOneOf " -" str)
+  where
+    capitalizeWord :: String -> String
+    capitalizeWord (x:xs) = toUpper x : map toLower xs
+    capitalizeWord _      = []
+
 
 -- |Introduction to paladin
 intro :: IO ()
@@ -66,5 +100,10 @@ end = do
 main :: IO ()
 main = do
   intro
+  _ <- ask "project name"
+  _ <- ask "name"
+  _ <- ask "email"
+  _ <- ask "github account"
+  _ <- ask "project in less than a dozen words"
   end
   
