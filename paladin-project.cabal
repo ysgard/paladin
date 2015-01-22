@@ -12,7 +12,19 @@ maintainer:          ysgard@gmail.com
 -- copyright:           
 category:            Development
 build-type:          Simple
--- extra-source-files:  
+-- extra-source-files:
+data-files: scaffold/LICENSE
+          , scaffold/Setup.hs
+          , scaffold/gitignore
+          , scaffold/project.cabal
+          , scaffold/interact
+          , scaffold/src/Main.hs
+--        , scaffold/src/ModuleName.hs
+--        , scaffold/src/ModuleName/Coconut.hs
+--        , scaffold/src/ModuleName/Swallow.hs
+--        , scaffold/test/ModuleName/Coconut/Test.hs
+--        , scaffold/test/ModuleName/Swallow/Test.hs
+--        , scaffold/test/Test.hs
 cabal-version:       >=1.10
 
 executable paladin
@@ -22,5 +34,6 @@ executable paladin
   build-depends:       base >=4.7
                      , ansi-terminal
                      , split
+                     , hastache
   hs-source-dirs:      src
   default-language:    Haskell2010
