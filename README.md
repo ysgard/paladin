@@ -32,6 +32,41 @@ Paladin is based on Yann Esposito's 'Holy-Haskell-Starter', which is here:
 With only minor customizations because my needs are different (and admittedly,
 much simpler!)
 
+Example of use:
+
+~~~
+➜  paladin git:(master) ✗ ./paladin
+
+
+          /*
+         />
+       @/<    --==:: PALADIN ::==--
+[\\\\\\(O):::<oooooooooooooooooooooooooooooooooooooooo-
+       @\<
+         \>
+          \*
+
+Creating project structure...
+What is your project name? My Project
+What is your name? (ysgard)
+What is your email? (ysgard@gmail.com)
+What is your github account? ("ysgard")
+What is your project in less than a dozen words? This is a test
+Initialized empty Git repository in /Users/ysgard/Haskell/paladin/my-project/.git/
+Writing a default package environment file to
+/Users/ysgard/Haskell/paladin/my-project/cabal.sandbox.config
+Creating a new sandbox at
+/Users/ysgard/Haskell/paladin/my-project/.cabal-sandbox
+Resolving dependencies...
+Notice: installing into a sandbox located at
+/Users/ysgard/Haskell/paladin/my-project/.cabal-sandbox
+Configuring my-project-0.1.0.0...
+Building my-project-0.1.0.0...
+Installed my-project-0.1.0.0
+--==:: Done! ::==--
+➜  paladin git:(master) ✗➜  paladin git:(master) ✗ ./paladin
+~~~
+
 Copyright: (c) Jan Van Uytven, 2015
 License: MIT
 Maintainer : ysgard@gmail.com
