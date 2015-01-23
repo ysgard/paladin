@@ -5,7 +5,7 @@ generates a cabal scaffold and git repository for new Haskell
 projects.  It is a fork of Yann Esposito's project, 'Holy Haskell
 Starter', but modified for my own specific needs.
 
-* It  reates a project directory and cabal project file using sane
+* It creates a project directory and cabal project file using sane
   versions of the provided project name.  For example, if you specify
   your project as "My uber awesome project" the directory (and
   project) will be named 'my-uber-awesome-project'.
@@ -29,8 +29,9 @@ Paladin is based on Yann Esposito's 'Holy-Haskell-Starter', which is here:
 
    http://yannesposito.com/Scratch/en/blog/Holy-Haskell-Starter/
 
-With only minor customizations because my needs are different (and admittedly,
-much simpler!)
+With only customizations because my needs are different (and admittedly,
+much simpler!).  It doesn't have any testing frameworks set up, and
+unlike holy, it isn't multithreaded.  
 
 Example of use:
 
