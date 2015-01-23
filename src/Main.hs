@@ -27,6 +27,8 @@ import qualified Data.Text.Lazy.IO as LT (writeFile)
 import Data.Time             (getCurrentTime)
 import Data.Time.Format      (formatTime)
 
+import Paladin.Raw
+
 import System.IO             (hFlush, stdout)
 import System.Console.ANSI
 import System.Directory
@@ -126,19 +128,17 @@ createProject p = do
   let context = mkGenericContext p
   createDirectory $ projectName p
   setCurrentDirectory $ projectName p
-  genFile context "gitignore" $ ".gitignore"
-  genFile context "project.cabal" $ (projectName p) ++ ".cabal"
-  genFile context "src/Main.hs" $ "src" </> "Main.hs"
-  genFile context "LICENSE" $ "LICENSE"
-  genFile context "Setup.hs" $ "Setup.hs"
+  genFile context gitignoreRaw $ ".gitignore"
+  genFile context projectcabalRaw $ (projectName p) ++ ".cabal"
+  genFile context mainRaw $ "src" </> "Main.hs"
+  genFile context licenseRaw $ "LICENSE"
+  genFile context setupRaw $ "Setup.hs"
 
 -- |Load a file from the scaffold, and then fill
 -- the template with values provided
-genFile :: MuContext IO -> FilePath -> FilePath -> IO ()
-genFile context fileName outputFileName = do
-  pkgFileName <- getDataFileName ("scaffold/" ++ fileName)
-  template <- DT.readFile pkgFileName
-  transformedFile <- hastacheStr defaultConfig template context
+genFile :: MuContext IO -> String -> FilePath -> IO ()
+genFile context template outputFileName = do
+  transformedFile <- hastacheStr defaultConfig (encodeStr template) context
   createDirectoryIfMissing True $ takeDirectory outputFileName
   LT.writeFile outputFileName transformedFile
 
