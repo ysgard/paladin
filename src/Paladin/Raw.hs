@@ -37,6 +37,7 @@ licenseRaw = intercalate "\n" [
   , "CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,"
   , "TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE"
   , "SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+  , ""
   ]
 
 gitignoreRaw :: String
@@ -44,6 +45,7 @@ gitignoreRaw = intercalate "\n" [
   ".cabal-sandbox/"
   , "cabal.sandbox.config"
   , "dist/"
+  , ""
   ]
 
 projectcabalRaw :: String
@@ -70,6 +72,7 @@ projectcabalRaw = intercalate "\n" [
   , "  hs-source-dirs: src"
   , "  ghc-options: -Wall"
   , "  default-language: Haskell2010"
+  , ""
   ]
 
 mainRaw :: String
@@ -87,7 +90,7 @@ mainRaw = intercalate "\n" [
   , ""
   , "main :: IO ()"
   , "main = do"
-  , "  putStrLn \"You fight with the strength of many men, sir Knight...\"--" 
+  , "  putStrLn \"You fight with the strength of many men, sir Knight...\""
   , ""
   ]
 
@@ -95,5 +98,6 @@ setupRaw :: String
 setupRaw = intercalate "\n" [
   "import Distribution.Simple"
   , "main = defaultMain"
+  , ""
   ]
 

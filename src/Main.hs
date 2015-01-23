@@ -88,7 +88,14 @@ ask info hint = do
   bk $ "What is your " ++ info ++ "?" ++ (maybe "" (\h -> " ("++h++")") hint)
   putStr "> "
   hFlush stdout -- Because we want to ask on the same line
-  getLine
+  response <- getLine
+  return $ check response
+    where check :: String -> String
+          check x
+            | x == "" = maybe "<unknown>" (\h -> h) hint
+            | otherwise = x
+
+
 
 -- |Verify that the project name is conformant
 checkProjectName :: String -> Bool
@@ -230,8 +237,6 @@ main = do
       moduleName = camelCase project
   gitconfig <- safeReadGitConfig
   let (name, email) = getNameAndMail gitconfig
-  putStrLn $ "name: " ++ show name
-  putStrLn $ "email: " ++ show email
   in_author <- ask "name" name
   in_email <- ask "email" email
   in_ghaccount <- ask "github account" Nothing
