@@ -62,7 +62,7 @@ projectcabalRaw = intercalate "\n" [
   , "-- extra-source-files"
   , "-- data-files"
   , "cabal-version: >=1.10"
-  , "executable {{moduleName}}"
+  , "executable {{projectName}}"
   , "  main-is: Main.hs"
   , "  --other-modules"
   , "  --other-extensions"
@@ -86,7 +86,9 @@ mainRaw = intercalate "\n" [
   , "-}"
   , ""
   , "main :: IO ()"
-  , "main ="
+  , "main = do"
+  , "  putStrLn \"You fight with the strength of many men, sir Knight...\"--" 
+  , ""
   ]
 
 setupRaw :: String
@@ -95,6 +97,3 @@ setupRaw = intercalate "\n" [
   , "main = defaultMain"
   ]
 
-
-
-             

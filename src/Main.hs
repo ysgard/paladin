@@ -18,12 +18,18 @@ much simpler!)
 -}
 module Main where
 
+import Control.Exception
+import Control.Monad         (guard)
+
 import Data.Char             (toLower, toUpper, isNumber, isLetter)
 import Data.Data
 import Data.List             (intercalate)
 import Data.List.Split       (splitOneOf)
-import qualified Data.Text.IO      as DT (readFile)
-import qualified Data.Text.Lazy.IO as LT (writeFile)
+import Data.Maybe            (fromJust)
+import qualified Data.Text         as T
+import qualified Data.Text.IO      as DT
+import qualified Data.Text.Lazy    as L
+import qualified Data.Text.Lazy.IO as LT
 import Data.Time             (getCurrentTime)
 import Data.Time.Format      (formatTime)
 
@@ -32,7 +38,9 @@ import Paladin.Raw
 import System.IO             (hFlush, stdout)
 import System.Console.ANSI
 import System.Directory
+import System.Environment    (getEnv)
 import System.FilePath.Posix (takeDirectory, (</>))
+import System.IO.Error
 import System.Locale         (defaultTimeLocale)
 import System.Process        (system)
 import System.Random         (randomIO)
@@ -40,7 +48,7 @@ import System.Random         (randomIO)
 import Text.Hastache
 import Text.Hastache.Context
 
-import Paths_paladin_project (getDataFileName)
+-- import Paths_paladin_project (getDataFileName)
 
 data Project = Project { projectName :: String
                        , moduleName  :: String
@@ -73,10 +81,11 @@ bkn str = colorPutStr Green $ "Bridgekeeper: " ++ str
 you :: String -> IO ()
 you str = colorPutStr Yellow $  "You: " ++ str ++ "\n"
 
--- |Prompts the user and returns an answer
-ask :: String -> IO String
-ask info = do
-  bk $ "What is your " ++ info ++ "?"
+-- |Prompts the user with a question (and an optional hint)
+-- and returns an answer
+ask :: String -> Maybe String -> IO String
+ask info hint = do
+  bk $ "What is your " ++ info ++ "?" ++ (maybe "" (\h -> " ("++h++")") hint)
   putStr "> "
   hFlush stdout -- Because we want to ask on the same line
   getLine
@@ -142,6 +151,45 @@ genFile context template outputFileName = do
   createDirectoryIfMissing True $ takeDirectory outputFileName
   LT.writeFile outputFileName transformedFile
 
+-- |Safely read the ~/.gitconfig file
+safeReadGitConfig :: IO L.Text
+safeReadGitConfig = do
+  e <- tryJust (guard . isDoesNotExistError)
+       (do home <-getEnv "HOME"
+           LT.readFile $ home </> ".gitconfig")
+  return $ either (const (L.empty)) id e
+
+-- |From a given string (obtained from gitconfig) extract the user's
+-- name and address (if they exist)
+getNameAndMail :: L.Text -> (Maybe String, Maybe String)
+getNameAndMail gitConfigContent = (getFirstValueFor splitted "name",
+                                   getFirstValueFor splitted "email")
+  where
+    -- make lines of words
+    splitted :: [[L.Text]]
+    splitted = map L.words $ L.lines gitConfigContent
+
+-- |Get the first line which starts with 'elem ='
+-- and return the third field (value)
+getFirstValueFor :: [[L.Text]] -> String -> Maybe String
+getFirstValueFor splitted key = firstJust $ map (getValueForKey key) splitted
+
+-- |Return the first Just value of a list of Maybe
+firstJust :: (Eq a) => [Maybe a] -> Maybe a
+firstJust l = case dropWhile (==Nothing) l of
+  [] -> Nothing
+  (j:_) -> j
+
+-- |Given a line of words ("word1":"word2":rest) getValue will return
+-- rest if word1 == key 'elem =' or Nothing otherwise
+getValueForKey :: String          -- key
+                  -> [L.Text]     -- line of words
+                  -> Maybe String -- the value if found
+getValueForKey el (n:e:xs)
+  | n == (L.pack el) && e == (L.pack "=") = Just $ L.unpack $ L.unwords xs
+  | otherwise = Nothing
+getValueForKey _ _ = Nothing
+
 
 -- |Introduction to paladin
 intro :: IO ()
@@ -176,15 +224,18 @@ main :: IO ()
 main = do
   intro
 
-  project <- ask "project name"
+  project <- ask "project name" Nothing
   ioassert (checkProjectName project) "Use only letters, numbers, spaces and dashes please"
   let projectName = projectNameFromString project
       moduleName = camelCase project
-
-  in_author <- ask "name"
-  in_email <- ask "email"
-  in_ghaccount <- ask "github account"
-  in_synopsis <- ask "project in less than a dozen words"
+  gitconfig <- safeReadGitConfig
+  let (name, email) = getNameAndMail gitconfig
+  putStrLn $ "name: " ++ show name
+  putStrLn $ "email: " ++ show email
+  in_author <- ask "name" name
+  in_email <- ask "email" email
+  in_ghaccount <- ask "github account" Nothing
+  in_synopsis <- ask "project in less than a dozen words" Nothing
   current_year <- getCurrentYear
   createProject $ Project projectName moduleName in_author in_email in_ghaccount in_synopsis current_year
 
