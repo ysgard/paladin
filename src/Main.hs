@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 {-|
 Module : Paladin
 Description: A cabal project scaffolder, based on Holy-Haskell-Starter
@@ -17,13 +18,36 @@ much simpler!)
 -}
 module Main where
 
-import Data.Char       (toLower, toUpper, isNumber, isLetter)
-import Data.List       (intercalate)
-import Data.List.Split (splitOneOf)
+import Data.Char             (toLower, toUpper, isNumber, isLetter)
+import Data.Data
+import Data.List             (intercalate)
+import Data.List.Split       (splitOneOf)
+import qualified Data.Text.IO      as DT (readFile)
+import qualified Data.Text.Lazy.IO as LT (writeFile)
+import Data.Time             (getCurrentTime)
+import Data.Time.Format      (formatTime)
 
-import System.IO       (hFlush, stdout)
+import System.IO             (hFlush, stdout)
 import System.Console.ANSI
+import System.Directory
+import System.FilePath.Posix (takeDirectory, (</>))
+import System.Locale         (defaultTimeLocale)
+import System.Process        (system)
 
+import Text.Hastache
+import Text.Hastache.Context
+
+import Paths_paladin_project (getDataFileName)
+
+data Project = Project { projectName :: String
+                       , moduleName  :: String
+                       , author      :: String
+                       , mail        :: String
+                       , ghaccount   :: String
+                       , synopsis    :: String
+                       , year        :: String
+                       } deriving (Data, Typeable)
+                           
 
 -- |The 'colorPutStr' function prints a colored string
 colorPutStr :: Color -> String -> IO ()
@@ -74,6 +98,34 @@ camelCase str = concatMap capitalizeWord (splitOneOf " -" str)
     capitalizeWord (x:xs) = toUpper x : map toLower xs
     capitalizeWord _      = []
 
+-- |assert function - if the given expression doesn't evaluate
+-- to true, bomb with an error.
+ioassert :: Bool -> String -> IO ()
+ioassert True _ = return ()
+ioassert False str = error str
+
+-- |Create the project directory and populate it
+createProject :: Project -> IO ()
+createProject p = do
+  let context = mkGenericContext p
+  createDirectory $ projectName p
+  setCurrentDirectory $ projectName p
+  genFile context "gitignore" $ ".gitignore"
+  genFile context "project.cabal" $ (projectName p) ++ ".cabal"
+  genFile context "src/Main.hs" $ "src" </> "Main.hs"
+  genFile context "LICENSE" $ "LICENSE"
+  genFile context "Setup.hs" $ "Setup.hs"
+
+-- |Load a file from the scaffold, and then fill
+-- the template with values provided
+genFile :: MuContext IO -> FilePath -> FilePath -> IO ()
+genFile context fileName outputFileName = do
+  pkgFileName <- getDataFileName ("scaffold/" ++ fileName)
+  template <- DT.readFile pkgFileName
+  transformedFile <- hastacheStr defaultConfig template context
+  createDirectoryIfMissing True $ takeDirectory outputFileName
+  LT.writeFile outputFileName transformedFile
+
 
 -- |Introduction to paladin
 intro :: IO ()
@@ -96,15 +148,36 @@ end = do
   putStrLn "Sir Bedevere: How do you know so much about swallows?"
   you "Well, you have to know these things when you're a king, you know."
 
+-- |Return the current year
+getCurrentYear :: IO String
+getCurrentYear = do
+  now <- getCurrentTime
+  return $ formatTime defaultTimeLocale "%Y" now
+
+
 -- |Entry point
 main :: IO ()
 main = do
   intro
-  _ <- ask "project name"
-  _ <- ask "name"
-  _ <- ask "email"
-  _ <- ask "github account"
-  _ <- ask "project in less than a dozen words"
+
+  project <- ask "project name"
+  ioassert (checkProjectName project) "Use only letters, numbers, spaces and dashes please"
+  let projectName = projectNameFromString project
+      moduleName = camelCase project
+
+  in_author <- ask "name"
+  in_email <- ask "email"
+  in_ghaccount <- ask "github account"
+  in_synopsis <- ask "project in less than a dozen words"
+  current_year <- getCurrentYear
+  createProject $ Project projectName moduleName in_author in_email in_ghaccount in_synopsis current_year
+
+  -- Initialize git and cabal, and run tests
+  _ <- system "git init ."
+  _ <- system "cabal sandbox init"
+  _ <- system "cabal install"
+  _ <- system "cabal test"
+  _ <- system $ "./.cabal-sandbox/bin/test-" ++ projectName
   end
 
   
