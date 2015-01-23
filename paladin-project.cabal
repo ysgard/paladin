@@ -38,6 +38,7 @@ executable paladin
                      , hastache
                      , old-locale
                      , process
+                     , random
                      , split
                      , text
                      , time

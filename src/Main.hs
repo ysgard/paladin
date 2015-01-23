@@ -33,6 +33,7 @@ import System.Directory
 import System.FilePath.Posix (takeDirectory, (</>))
 import System.Locale         (defaultTimeLocale)
 import System.Process        (system)
+import System.Random         (randomIO)
 
 import Text.Hastache
 import Text.Hastache.Context
@@ -102,8 +103,23 @@ camelCase str = concatMap capitalizeWord (splitOneOf " -" str)
 -- to true, bomb with an error.
 ioassert :: Bool -> String -> IO ()
 ioassert True _ = return ()
-ioassert False str = error str
+ioassert False str = holyError str
 
+-- |Fun random error generator, not needed, just fun
+holyError :: String -> IO ()
+holyError str = do
+  r <- randomIO
+  if r then do
+    bk "What... is your favourite colour?"
+    you "Blue. no, yel..."
+    else do
+    bk "What is the capital of Assyria?"
+    you "I don't know that!"
+  putStrLn "[You are thrown over the edge into the volcano]"
+  you $ "Auuuuuuuuuuugh " ++ str 
+  bk "Hee hee heh."
+  error "...has been thrown over the cliff!"
+  
 -- |Create the project directory and populate it
 createProject :: Project -> IO ()
 createProject p = do
