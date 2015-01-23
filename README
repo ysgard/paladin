@@ -2,8 +2,8 @@
 
 Paladin is a simple, self-contained program that automatically
 generates a cabal scaffold and git repository for new Haskell
-projects.  It is a fork of Yann Esposito's project, 'Holy Haskell
-Starter', but modified for my own specific needs.
+projects.  It is a fork of Yann Esposito's (@yogsototh) 'holy-project'
+but pared down and simplified.
 
 * It creates a project directory and cabal project file using sane
   versions of the provided project name.  For example, if you specify
@@ -19,8 +19,7 @@ Starter', but modified for my own specific needs.
 
 * It initializes a git repo for you.
 
-* It dumps a README containing a few details of your project, as well as
-  an MIT license.
+* It dumps an MIT license file.
 
 * Unlike Holy, which is a cabal package, Paladin's templates are built
   into the executable and thus only the executable is needed to
@@ -30,8 +29,6 @@ Paladin is based on Yann Esposito's 'Holy-Haskell-Starter', which is here:
 
    http://yannesposito.com/Scratch/en/blog/Holy-Haskell-Starter/
 
-With only minor customizations because my needs are different (and admittedly,
-much simpler!)
 
 Copyright: (c) Jan Van Uytven, 2015
 License: MIT
