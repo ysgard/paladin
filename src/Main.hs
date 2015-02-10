@@ -260,6 +260,9 @@ main = do
   -- Initialize git and cabal, and run tests
   _ <- system "git init ."
   _ <- system "cabal sandbox init"
+  -- Use stackage for up-to-date packages that (hopefully) don't break
+  _ <- system "wget http://www.stackage.org/lts/cabal.config"
+  _ <- system "cabal update"
   _ <- system "cabal install"
   --_ <- system "cabal test"
   --_ <- system $ "./.cabal-sandbox/bin/test-" ++ projectName
