@@ -30,7 +30,7 @@ import Data.Char              (toLower, toUpper, isNumber, isLetter)
 import Data.Data
 import Data.List              (intercalate)
 import Data.List.Split        (splitOneOf)
-import Data.Maybe             (fromJust)
+import Data.Maybe             (fromJust, fromMaybe)
 import qualified Data.Text              as T
 import qualified Data.Text.IO           as TI
 import qualified Data.Text.Lazy         as TL
@@ -45,6 +45,7 @@ import Paladin.Raw
 
 import System.IO              (hFlush, stdout)
 import System.Console.ANSI
+import System.Console.GetOpt
 import System.Directory
 import System.Environment     (getEnv)
 import System.FilePath.Posix  (takeDirectory, (</>))
@@ -66,7 +67,25 @@ data Project = Project { projectName :: String
                        , synopsis    :: String
                        , year        :: String
                        } deriving (Data, Typeable)
-                           
+
+-- flags that can be passed to paladin
+data Flag = Help
+          | Version
+          | Stackage    -- Use Stackage instead of Hackage
+          deriving Show
+
+options :: [OptDescr Flag]
+options = [
+  Option ['V']      ["version"]  (NoArg Version)  "show version number",
+  Option ['s']      ["stackage"] (NoArg Stackage) "enable stackage",
+  Option ['h', '?'] ["help"]     (NoArg Help)     "this help message"
+  ]
+
+paladinOpts :: [String] -> IO ([Flag], [String])
+paladinOpts argv = case getOpt Permute options argv of
+  (o, n, [])   -> return (o, n)
+  (_, _, errs) -> ioError (userError (concat errs ++ usageInfo header options))
+  where header = "Usage: paladin [OPTION...] [NAME]"
 
 -- |The 'colorPutStr' function prints a colored string
 colorPutStr :: Color -> String -> IO ()
