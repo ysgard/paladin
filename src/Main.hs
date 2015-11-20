@@ -36,7 +36,7 @@ import qualified Data.Text.IO           as TI
 import qualified Data.Text.Lazy         as TL
 import qualified Data.Text.Lazy.Builder as TLB
 import qualified Data.Text.Lazy.IO      as TLI
-import Data.Time              (getCurrentTime)
+import Data.Time              (getCurrentTime, defaultTimeLocale)
 import Data.Time.Format       (formatTime)
 
 import Network.HTTP.Conduit
@@ -49,7 +49,6 @@ import System.Directory
 import System.Environment     (getEnv)
 import System.FilePath.Posix  (takeDirectory, (</>))
 import System.IO.Error
-import System.Locale          (defaultTimeLocale)
 import System.Process         (system)
 import System.Random          (randomIO)
 
@@ -124,14 +123,14 @@ holyError :: String -> IO ()
 holyError str = do
   r <- randomIO
   if r then do
-    colorPutStr Red "What... is your favourite colour?"
+    colorPutStr Red "What... is your favourite colour?\n"
     putStrLn "Blue. no, yel..."
     else do
-    colorPutStr Red "What is the capital of Assyria?"
+    colorPutStr Red "What is the capital of Assyria?\n"
     putStrLn "I don't know that!"
-  colorPutStr Cyan "[You are thrown over the edge into the volcano]"
+  colorPutStr Cyan "[You are thrown over the edge into the volcano]\n"
   putStrLn $ "Auuuuuuuuuuugh " ++ str 
-  colorPutStr Red "Hee hee heh."
+  colorPutStr Red "Hee hee heh.\n"
   error "...has been thrown over the cliff!"
   
 -- |Create the project directory and populate it
@@ -196,10 +195,11 @@ getValueForKey _ _ = Nothing
 -- |Make an HTTP request, making sure the User-Agent is set
 simpleHTTPWithUserAgent :: String -> IO BL.ByteString
 simpleHTTPWithUserAgent url = do
+  m <- newManager tlsManagerSettings
   r <- parseUrl url
   let request = r { requestHeaders = [ ("User-Agent", "HTTP-Conduite") ] }
   withManager $ (return.responseBody) <=< httpLbs request
-
+  
 -- | Get the Github username for a specific email
 getGHUser :: Maybe String -> IO (Maybe String)
 getGHUser Nothing = return Nothing
@@ -238,15 +238,40 @@ getCurrentYear = do
   now <- getCurrentTime
   return $ formatTime defaultTimeLocale "%Y" now
 
-
+-- |Check that stack is available
+checkForStack :: IO Bool
+checkForStack = do
+  found <- findExecutable "stack"
+  return $ case found of
+            Nothing -> False
+            Just _  -> True
+  
+checkDirectoryName :: String -> IO String
+checkDirectoryName name = do
+  putStrLn $ "Checking " ++ name
+  exists <- doesDirectoryExist name
+  if exists == False
+    then return name
+    else do putStrLn $ "Directory " ++ name ++ " already exists."
+            new_name <- ask ("alternative name") Nothing
+            case new_name of
+             "<unknown>" -> do holyError "your project name cannot be nothing!!!"
+                               return "failed"
+             _ -> checkDirectoryName new_name
+                     
 -- |Entry point
 main :: IO ()
 main = do
   intro
+  -- Make sure stack is on the path
+  found_stack <- checkForStack
+  ioassert found_stack "Could not find stack! Exiting..."
+  
   project <- ask "project name" Nothing
   ioassert (checkProjectName project) "Use only letters, numbers, spaces and dashes please"
-  let projectName = projectNameFromString project
-      moduleName = camelCase project
+  projectName <- checkDirectoryName $ projectNameFromString project
+  let moduleName = camelCase project
+  
   gitconfig <- safeReadGitConfig
   let (name, email) = getNameAndMail gitconfig
   ghuser <- getGHUser email
@@ -259,13 +284,9 @@ main = do
 
   -- Initialize git and cabal, and run tests
   _ <- system "git init ."
-  _ <- system "cabal sandbox init"
-  -- Use stackage for up-to-date packages that (hopefully) don't break
-  _ <- system "wget http://www.stackage.org/lts/cabal.config"
-  _ <- system "cabal update"
-  _ <- system "cabal install"
-  --_ <- system "cabal test"
-  --_ <- system $ "./.cabal-sandbox/bin/test-" ++ projectName
+  _ <- system "stack init"
+  _ <- system "stack build"
+  _ <- system $ "stack exec " ++ projectName
   end
 
   

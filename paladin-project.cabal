@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 executable paladin
   main-is:             Main.hs
-  -- other-modules:       
+  other-modules:       Paladin.Raw
   -- other-extensions:    
   build-depends:       base >=4.7
                      , aeson
@@ -29,7 +29,6 @@ executable paladin
                      , http-conduit
                      , lens
                      , lens-aeson
-                     , old-locale
                      , process
                      , random
                      , split
